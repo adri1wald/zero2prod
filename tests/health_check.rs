@@ -3,7 +3,8 @@ use common::spawn_app;
 
 #[tokio::test]
 async fn health_check_works() {
-    let addr = spawn_app();
+    let app = spawn_app().await;
+    let addr = app.address;
     let client = reqwest::Client::new();
 
     let response = client

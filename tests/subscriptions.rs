@@ -1,17 +1,12 @@
 mod common;
 use common::spawn_app;
-use sqlx::{Connection, PgConnection};
-use zero2prod::configuration::get_configuration;
 
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
     // Arrange
-    let addr = spawn_app();
-    let config = get_configuration().expect("Failed to read configuration");
-    let connection_string = config.database.connection_string();
-    let mut connection = PgConnection::connect(&connection_string)
-        .await
-        .expect("Failed to connect to Postgres.");
+    let app = spawn_app().await;
+    let addr = app.address;
+    let db_pool = app.db_pool;
     let client = reqwest::Client::new();
 
     let name = "Adrien%20Wald";
@@ -31,7 +26,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
     assert_eq!(200, response.status().as_u16());
 
     let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
-        .fetch_one(&mut connection)
+        .fetch_one(&db_pool)
         .await
         .expect("Failed to fetch saved subscription.");
     assert_eq!(saved.email, "adrien@coloop.ai");
@@ -41,7 +36,8 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 #[tokio::test]
 async fn subscribe_returns_a_400_when_data_is_missing() {
     // Arrange
-    let addr = spawn_app();
+    let app = spawn_app().await;
+    let addr = app.address;
     let client = reqwest::Client::new();
 
     let name = "Adrien%20Wald";
