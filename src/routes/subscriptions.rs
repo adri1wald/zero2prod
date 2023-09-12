@@ -14,7 +14,11 @@ pub async fn subscribe(
     form: web::Form<SubscribeFormData>,
     pool: web::Data<PgPool>,
 ) -> impl Responder {
-    log::info!("Saving new subscriber details in the database");
+    log::info!(
+        "Adding '{}' '{}' as a new subscriber",
+        form.email,
+        form.name
+    );
     let result = sqlx::query!(
         r#"
         INSERT INTO subscriptions (id, email, name, created_at)
