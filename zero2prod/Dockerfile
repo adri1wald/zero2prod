@@ -1,12 +1,21 @@
-FROM rust:1.72.0 AS builder
+FROM rust:1.72.0 AS chef
+
+RUN cargo install cargo-chef --locked
 
 WORKDIR /app
-
-# Install lld and clang for linking configuration
 RUN apt update && apt install lld clang -y
 
-COPY . .
+FROM chef AS planner
 
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS builder
+
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+
+COPY . .
 ENV SQLX_OFFLINE true
 RUN cargo build --release
 
