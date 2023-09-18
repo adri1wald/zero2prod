@@ -15,3 +15,8 @@ services:
     instance_size_slug: basic-xxs
     routes:
       - path: /
+databases:
+  - name: postgres
+    engine: PG
+    num_nodes: 1
+    size: db-s-dev-database
